@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model ScheduledEmail {
+  id            String    @id @default(uuid())
+  recipient     String
+  subject       String
+  message       String
+  scheduledAt   DateTime
+  status        String    @default("pending")
+  jobId         String?
+  sentAt        DateTime?
+  failureReason String?
+  retryCount    Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  logs EmailLog[]
+
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([jobId])
+}
+
+model EmailLog {
+  id              String  @id @default(uuid())
+  scheduledEmailId String
+  status          String
+  message         String?
+  createdAt       DateTime @default(now())
+
+  scheduledEmail ScheduledEmail @relation(fields: [scheduledEmailId], references: [id], onDelete: Cascade)
+
+  @@index([scheduledEmailId])
+}

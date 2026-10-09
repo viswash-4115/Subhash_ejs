@@ -1,0 +1,89 @@
+# ============================================
+#  ScheduledMail - System Requirements
+# ============================================
+#
+#  Run this script to install everything
+#  needed to run the project from scratch.
+#
+#  Prerequisites (install manually):
+#    - Node.js 18+  → https://nodejs.org
+#    - Redis 6+     → https://redis.io  (or use Docker)
+#    - Git          → https://git-scm.com
+#
+# ============================================
+
+# --- Step 1: Clone the repository ---
+# git clone <your-repo-url>
+# cd scheduled-mail
+
+# --- Step 2: Backend dependencies ---
+# cd backend
+# npm install
+
+# --- Step 3: Generate Prisma client & create database ---
+# npx prisma generate
+# npx prisma db push
+
+# --- Step 4: Frontend dependencies ---
+# cd ../frontend
+# npm install
+
+# --- Step 5: Start Redis (Docker) ---
+# docker compose up -d
+
+# --- Step 6: Run the app (3 terminals) ---
+# Terminal 1: cd backend && npm run dev
+# Terminal 2: cd backend && npm run worker
+# Terminal 3: cd frontend && npm run dev
+
+
+# ============================================
+#  Automated Setup (Windows PowerShell)
+# ============================================
+#  Copy-paste this block into PowerShell
+# ============================================
+
+# Check Node.js
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Write-Host "ERROR: Node.js is not installed. Download from https://nodejs.org" -ForegroundColor Red
+    exit 1
+}
+$nodeVer = node --version
+Write-Host "Node.js: $nodeVer" -ForegroundColor Green
+
+# Check Redis (try common ports)
+$redisOk = $false
+try { $tcp = New-Object System.Net.Sockets.TcpClient; $tcp.Connect("127.0.0.1", 6379); $redisOk = $true; $tcp.Close() } catch {}
+if (-not $redisOk) {
+    try { $tcp2 = New-Object System.Net.Sockets.TcpClient; $tcp2.Connect("127.0.0.1", 6380); $redisOk = $true; $tcp2.Close() } catch {}
+}
+if ($redisOk) {
+    Write-Host "Redis: Running" -ForegroundColor Green
+} else {
+    Write-Host "WARNING: Redis is not running on port 6379 or 6380" -ForegroundColor Yellow
+    Write-Host "  Start with: docker compose up -d" -ForegroundColor Yellow
+}
+
+Write-Host ""
+Write-Host "Installing backend dependencies..." -ForegroundColor Cyan
+cd "$PSScriptRoot\backend"
+npm install
+npx prisma generate
+npx prisma db push
+
+Write-Host ""
+Write-Host "Installing frontend dependencies..." -ForegroundColor Cyan
+cd "$PSScriptRoot\frontend"
+npm install
+
+Write-Host ""
+Write-Host "============================================" -ForegroundColor Green
+Write-Host " Setup complete!" -ForegroundColor Green
+Write-Host "============================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "To run the app:" -ForegroundColor White
+Write-Host "  Terminal 1:  cd backend  && npm run dev" -ForegroundColor Gray
+Write-Host "  Terminal 2:  cd backend  && npm run worker" -ForegroundColor Gray
+Write-Host "  Terminal 3:  cd frontend && npm run dev" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Then open: http://localhost:5173" -ForegroundColor White
